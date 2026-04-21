@@ -1,0 +1,189 @@
+name: Build executables
+
+on:
+  push:
+    branches: ['main']
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  auto-tag:
+    # Lance uniquement sur push main ou dispatch manuel (pas sur push de tag)
+    if: "!startsWith(github.ref, 'refs/tags/')"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Calculer le prochain tag
+        id: next_tag
+        run: |
+          latest=$(git tag --sort=-version:refname | grep '^v' | head -n1)
+          if [ -z "$latest" ]; then
+            next="v1.0.0"
+          else
+            IFS='.' read -r major minor patch <<< "${latest#v}"
+            next="v${major}.${minor}.$((patch + 1))"
+          fi
+          echo "tag=$next" >> $GITHUB_OUTPUT
+          echo "Prochain tag : $next"
+
+      - name: Créer et pousser le tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag ${{ steps.next_tag.outputs.tag }}
+          git push origin ${{ steps.next_tag.outputs.tag }}
+
+  build-macos:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: macos-latest
+    env:
+      APPLE_CERT_BASE64: ${{ secrets.APPLE_CERT_BASE64 }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build executable (universal binary arm64 + x86_64)
+        run: |
+          # Build arm64
+          pyinstaller --onefile --windowed --name ZoquerGMail mbox_analyzer.py
+          mv dist/ZoquerGMail.app dist/ZoquerGMail-arm64.app
+          # Build x86_64
+          arch -x86_64 python -m PyInstaller --onefile --windowed --name ZoquerGMail mbox_analyzer.py
+          mv dist/ZoquerGMail.app dist/ZoquerGMail-x86_64.app
+          # Fusionner avec lipo pour un binaire universel
+          cp -R dist/ZoquerGMail-arm64.app dist/ZoquerGMail.app
+          lipo -create -output dist/ZoquerGMail.app/Contents/MacOS/ZoquerGMail \
+            dist/ZoquerGMail-arm64.app/Contents/MacOS/ZoquerGMail \
+            dist/ZoquerGMail-x86_64.app/Contents/MacOS/ZoquerGMail
+
+      - name: Sign and notarize
+        if: ${{ env.APPLE_CERT_BASE64 != '' }}
+        env:
+          APPLE_CERT_PASSWORD: ${{ secrets.APPLE_CERT_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+        run: |
+          # Importer le certificat dans un keychain temporaire
+          echo "$APPLE_CERT_BASE64" | base64 --decode > certificate.p12
+          security create-keychain -p "temp-keychain-password" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "temp-keychain-password" build.keychain
+          security import certificate.p12 -k build.keychain -P "$APPLE_CERT_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "temp-keychain-password" build.keychain
+          rm certificate.p12
+
+          # Signer
+          codesign --deep --force --verify --verbose \
+            --sign "Developer ID Application: Norou N'Doye (AP294Y6225)" \
+            --options runtime \
+            --entitlements /dev/stdin \
+            dist/ZoquerGMail.app <<'ENTITLEMENTS'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>com.apple.security.cs.allow-jit</key><false/>
+            <key>com.apple.security.cs.disable-library-validation</key><true/>
+          </dict>
+          </plist>
+          ENTITLEMENTS
+
+          # Notariser
+          ditto -c -k --keepParent dist/ZoquerGMail.app ZoquerGMail-notarize.zip
+          xcrun notarytool submit ZoquerGMail-notarize.zip \
+            --apple-id "$APPLE_ID" \
+            --team-id "$APPLE_TEAM_ID" \
+            --password "$APPLE_APP_PASSWORD" \
+            --wait
+          rm ZoquerGMail-notarize.zip
+
+          # Agrafer le ticket
+          xcrun stapler staple dist/ZoquerGMail.app
+
+      - name: Zipper le .app (préserve les permissions et la structure)
+        run: ditto -c -k --keepParent dist/ZoquerGMail.app ZoquerGMail-macOS.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZoquerGMail-macOS
+          path: ZoquerGMail-macOS.zip
+
+  build-windows:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build executable
+        run: pyinstaller --onefile --windowed --name ZoquerGMail mbox_analyzer.py
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZoquerGMail-Windows
+          path: dist/ZoquerGMail.exe
+
+  release:
+    needs: [build-macos, build-windows]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Supprimer les anciennes releases et tags
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CURRENT_TAG: ${{ github.ref_name }}
+        run: |
+          gh release list --repo ${{ github.repository }} --limit 100 --json tagName -q '.[].tagName' \
+            | while read tag; do
+                if [ "$tag" != "$CURRENT_TAG" ]; then
+                  echo "Suppression release + tag : $tag"
+                  gh release delete "$tag" --repo ${{ github.repository }} --yes --cleanup-tag || true
+                fi
+              done
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/ZoquerGMail-macOS.zip
+            artifacts/ZoquerGMail.exe
+          generate_release_notes: true
