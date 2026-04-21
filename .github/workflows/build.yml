@@ -8,6 +8,8 @@ on:
 jobs:
   build-macos:
     runs-on: macos-latest
+    env:
+      APPLE_CERT_BASE64: ${{ secrets.APPLE_CERT_BASE64 }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,9 +29,8 @@ jobs:
         run: pyinstaller --onefile --windowed --name ZoquerGMail mbox_analyzer.py
 
       - name: Sign and notarize
-        if: ${{ secrets.APPLE_CERT_BASE64 != '' }}
+        if: ${{ env.APPLE_CERT_BASE64 != '' }}
         env:
-          APPLE_CERT_BASE64: ${{ secrets.APPLE_CERT_BASE64 }}
           APPLE_CERT_PASSWORD: ${{ secrets.APPLE_CERT_PASSWORD }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
