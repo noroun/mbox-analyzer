@@ -25,8 +25,19 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
-      - name: Build executable
-        run: pyinstaller --onefile --windowed --name ZoquerGMail mbox_analyzer.py
+      - name: Build executable (universal binary arm64 + x86_64)
+        run: |
+          # Build arm64
+          pyinstaller --onefile --windowed --name ZoquerGMail mbox_analyzer.py
+          mv dist/ZoquerGMail.app dist/ZoquerGMail-arm64.app
+          # Build x86_64
+          arch -x86_64 python -m PyInstaller --onefile --windowed --name ZoquerGMail mbox_analyzer.py
+          mv dist/ZoquerGMail.app dist/ZoquerGMail-x86_64.app
+          # Fusionner avec lipo pour un binaire universel
+          cp -R dist/ZoquerGMail-arm64.app dist/ZoquerGMail.app
+          lipo -create -output dist/ZoquerGMail.app/Contents/MacOS/ZoquerGMail \
+            dist/ZoquerGMail-arm64.app/Contents/MacOS/ZoquerGMail \
+            dist/ZoquerGMail-x86_64.app/Contents/MacOS/ZoquerGMail
 
       - name: Sign and notarize
         if: ${{ env.APPLE_CERT_BASE64 != '' }}
@@ -73,11 +84,14 @@ jobs:
           # Agrafer le ticket
           xcrun stapler staple dist/ZoquerGMail.app
 
+      - name: Zipper le .app (préserve les permissions et la structure)
+        run: ditto -c -k --keepParent dist/ZoquerGMail.app ZoquerGMail-macOS.zip
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ZoquerGMail-macOS
-          path: dist/ZoquerGMail.app
+          path: ZoquerGMail-macOS.zip
 
   build-windows:
     runs-on: windows-latest
@@ -116,16 +130,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
-
-      - name: Zip artifacts
-        run: |
-          cd artifacts
-          for dir in */; do
-            zip -r "${dir%/}.zip" "$dir"
-          done
+          merge-multiple: true
 
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
-          files: artifacts/*.zip
+          files: |
+            artifacts/ZoquerGMail-macOS.zip
+            artifacts/ZoquerGMail.exe
           generate_release_notes: true
