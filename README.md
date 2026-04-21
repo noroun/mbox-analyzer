@@ -160,14 +160,21 @@ L'exécutable apparaît dans `dist/`.
 
 ### Compilation automatique via GitHub Actions
 
-À chaque push d'un tag `v*` (ex: `v1.0.0`), GitHub compile automatiquement les versions Mac et Windows et crée une Release.
+À chaque push sur `main` (ou déclenchement manuel depuis l'onglet **Actions**), le pipeline s'exécute automatiquement en une seule séquence :
+
+1. **auto-tag** — calcule et crée le prochain tag (ex: v1.0.0 → v1.0.1)
+2. **build-macos** + **build-windows** — compilent les binaires en parallèle
+3. **release** — crée la Release GitHub avec les deux fichiers joints
+
+Pour publier une nouvelle version, il suffit de pousser sur `main` :
 
 ```bash
-git tag v1.0.0
-git push origin v1.0.0
+git add .
+git commit -m "votre message"
+git push origin main
 ```
 
-Vous pouvez aussi lancer manuellement le workflow depuis l'onglet **Actions** de GitHub.
+Le tag est créé automatiquement — inutile de le créer à la main.
 
 ---
 
