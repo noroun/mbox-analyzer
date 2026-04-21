@@ -3,16 +3,15 @@ name: Build executables
 on:
   push:
     branches: ['main']
-    tags: ['v*']
   workflow_dispatch:
 
 jobs:
   auto-tag:
-    # Lance uniquement sur push main ou dispatch manuel (pas sur push de tag)
-    if: "!startsWith(github.ref, 'refs/tags/')"
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    outputs:
+      tag: ${{ steps.next_tag.outputs.tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,7 +39,7 @@ jobs:
           git push origin ${{ steps.next_tag.outputs.tag }}
 
   build-macos:
-    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [auto-tag]
     runs-on: macos-latest
     env:
       APPLE_CERT_BASE64: ${{ secrets.APPLE_CERT_BASE64 }}
@@ -128,7 +127,7 @@ jobs:
           path: ZoquerGMail-macOS.zip
 
   build-windows:
-    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [auto-tag]
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -155,8 +154,7 @@ jobs:
           path: dist/ZoquerGMail.exe
 
   release:
-    needs: [build-macos, build-windows]
-    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [auto-tag, build-macos, build-windows]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -164,7 +162,7 @@ jobs:
       - name: Supprimer les anciennes releases et tags
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CURRENT_TAG: ${{ github.ref_name }}
+          CURRENT_TAG: ${{ needs.auto-tag.outputs.tag }}
         run: |
           gh release list --repo ${{ github.repository }} --limit 100 --json tagName -q '.[].tagName' \
             | while read tag; do
@@ -183,6 +181,7 @@ jobs:
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ needs.auto-tag.outputs.tag }}
           files: |
             artifacts/ZoquerGMail-macOS.zip
             artifacts/ZoquerGMail.exe
