@@ -1,0 +1,18 @@
+__pycache__/
+*.pyc
+*.pyo
+*.spec
+build/
+dist/
+venv/
+env/
+.venv/
+*.mbox
+resultats_mbox/
+.DS_Store
+Thumbs.db
+*.csv
+.~lock.*#
+
+# Notes perso (non partagées)
+MARCHE_A_SUIVRE.md
