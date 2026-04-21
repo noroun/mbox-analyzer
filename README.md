@@ -7,6 +7,7 @@
 > 💡 Cet outil vient en **complément des instructions de l'équipe gadz.org et de vos DDP**. Utilisez-le pour recenser vos comptes en ligne avant de procéder à la migration de votre adresse.
 
 Cet outil analyse l'export de votre boîte mail Gmail et génère un **fichier Excel** (`resultats.xlsx`) avec trois onglets :
+
 - ✅ **Comptes détectés** — sites où vous avez probablement créé un compte
 - 📰 **Newsletters** — abonnements avec lien de désinscription cliquable
 - 📋 **Tous les expéditeurs** — liste complète pour vérification manuelle
@@ -25,7 +26,10 @@ Cet outil analyse l'export de votre boîte mail Gmail et génère un **fichier E
 
 ### Étape 1 — Téléchargez l'outil
 
-Rendez-vous sur la page **Releases** de ce projet et téléchargez :
+Rendez-vous sur la page **Releases** de ce projet : https://github.com/noroun/mbox-analyzer/releases
+
+et téléchargez :
+
 - **Windows** → `ZoquerGMail-Windows.zip`
 - **Mac** → `ZoquerGMail-macOS.zip`
 
@@ -55,20 +59,22 @@ Décompressez le fichier ZIP en double-cliquant dessus.
 ### Étape 4 — Lancez l'analyse
 
 #### Sur Mac
+
 1. Double-cliquez sur **ZoquerGMail.app**
-2. ⚠️ Si Mac affiche *« Apple ne peut pas vérifier que cette app ne contient pas de logiciel malveillant »* :
+2. ⚠️ Si Mac affiche _« Apple ne peut pas vérifier que cette app ne contient pas de logiciel malveillant »_ :
    - Faites **clic droit** sur l'app → **Ouvrir** → **Ouvrir** dans la fenêtre de confirmation
    - Vous n'aurez à le faire qu'une seule fois
 
 #### Sur Windows
+
 1. Double-cliquez sur **ZoquerGMail.exe**
-2. ⚠️ Si Windows affiche *« Windows a protégé votre ordinateur »* :
+2. ⚠️ Si Windows affiche _« Windows a protégé votre ordinateur »_ :
    - Cliquez sur **« Informations complémentaires »**
    - Puis sur **« Exécuter quand même »**
 
 ### Étape 5 — Utilisez l'outil
 
-1. Cliquez sur **« Parcourir »** à côté de *« Fichier MBOX »* et sélectionnez votre fichier `.mbox`
+1. Cliquez sur **« Parcourir »** à côté de _« Fichier MBOX »_ et sélectionnez votre fichier `.mbox`
 2. Le dossier de sortie est rempli automatiquement (vous pouvez le changer)
 3. Cliquez sur **« Lancer l'analyse »**
 4. ⏱️ Patientez : selon la taille de votre boîte, ça peut prendre de quelques minutes à 30 minutes
@@ -77,11 +83,11 @@ Décompressez le fichier ZIP en double-cliquant dessus.
 
 L'outil génère un fichier **`resultats.xlsx`** ouvrable dans Excel, Numbers, ou Google Sheets. Il contient 3 onglets :
 
-| Onglet | Contenu | À quoi ça sert |
-|---|---|---|
-| **Comptes détectés** | Sites où vous avez un compte | **Changer l'email de connexion** sur chacun |
-| **Newsletters** | Abonnements + lien de désinscription cliquable | **Vous désinscrire** d'un clic |
-| **Tous les expéditeurs** | Tous les expéditeurs uniques | Vérification manuelle si besoin |
+| Onglet                   | Contenu                                        | À quoi ça sert                              |
+| ------------------------ | ---------------------------------------------- | ------------------------------------------- |
+| **Comptes détectés**     | Sites où vous avez un compte                   | **Changer l'email de connexion** sur chacun |
+| **Newsletters**          | Abonnements + lien de désinscription cliquable | **Vous désinscrire** d'un clic              |
+| **Tous les expéditeurs** | Tous les expéditeurs uniques                   | Vérification manuelle si besoin             |
 
 💡 **Astuce** : chaque onglet a des filtres activés — cliquez sur les flèches à côté des en-têtes pour trier ou filtrer.
 
@@ -101,10 +107,10 @@ L'outil génère un fichier **`resultats.xlsx`** ouvrable dans Excel, Numbers, o
 L'analyse du MBOX rate par construction deux types de comptes : ceux dont vous avez supprimé les mails de bienvenue, et ceux ouverts via **« Se connecter avec Google »** (SSO/OAuth) qui ne laissent souvent aucune trace dans la boîte. Pour les retrouver, ouvrez ces deux pages dans votre navigateur (connecté à votre compte Google) :
 
 - 🔑 **Mots de passe enregistrés** → [https://passwords.google.com](https://passwords.google.com)
-  La liste de tous les sites pour lesquels Chrome / Android a stocké un mot de passe. Recoupez avec l'onglet *Comptes détectés* — tout site présent ici et absent du XLSX est un compte à traiter.
+  La liste de tous les sites pour lesquels Chrome / Android a stocké un mot de passe. Recoupez avec l'onglet _Comptes détectés_ — tout site présent ici et absent du XLSX est un compte à traiter.
 
 - 🔗 **Applications connectées via Google** → [https://myaccount.google.com/connections](https://myaccount.google.com/connections)
-  La liste des services tiers connectés via *Sign in with Google* (Spotify, Notion, Canva, Figma, etc.). C'est la seule façon fiable de retrouver les comptes SSO, **invisibles dans les emails**.
+  La liste des services tiers connectés via _Sign in with Google_ (Spotify, Notion, Canva, Figma, etc.). C'est la seule façon fiable de retrouver les comptes SSO, **invisibles dans les emails**.
 
 Pour chaque entrée trouvée sur ces deux pages : changez l'email/identifiant de connexion vers votre nouvelle adresse, puis révoquez l'accès Google si vous fermez votre compte Gmail.
 

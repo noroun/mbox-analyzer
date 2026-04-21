@@ -2,11 +2,45 @@ name: Build executables
 
 on:
   push:
+    branches: ['main']
     tags: ['v*']
-  workflow_dispatch:  # Permet de lancer manuellement depuis l'onglet Actions
+  workflow_dispatch:
 
 jobs:
+  auto-tag:
+    # Lance uniquement sur push main ou dispatch manuel (pas sur push de tag)
+    if: "!startsWith(github.ref, 'refs/tags/')"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Calculer le prochain tag
+        id: next_tag
+        run: |
+          latest=$(git tag --sort=-version:refname | grep '^v' | head -n1)
+          if [ -z "$latest" ]; then
+            next="v1.0.0"
+          else
+            IFS='.' read -r major minor patch <<< "${latest#v}"
+            next="v${major}.${minor}.$((patch + 1))"
+          fi
+          echo "tag=$next" >> $GITHUB_OUTPUT
+          echo "Prochain tag : $next"
+
+      - name: Créer et pousser le tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag ${{ steps.next_tag.outputs.tag }}
+          git push origin ${{ steps.next_tag.outputs.tag }}
+
   build-macos:
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: macos-latest
     env:
       APPLE_CERT_BASE64: ${{ secrets.APPLE_CERT_BASE64 }}
@@ -94,6 +128,7 @@ jobs:
           path: ZoquerGMail-macOS.zip
 
   build-windows:
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -126,6 +161,19 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Supprimer les anciennes releases et tags
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CURRENT_TAG: ${{ github.ref_name }}
+        run: |
+          gh release list --repo ${{ github.repository }} --limit 100 --json tagName -q '.[].tagName' \
+            | while read tag; do
+                if [ "$tag" != "$CURRENT_TAG" ]; then
+                  echo "Suppression release + tag : $tag"
+                  gh release delete "$tag" --repo ${{ github.repository }} --yes --cleanup-tag || true
+                fi
+              done
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
