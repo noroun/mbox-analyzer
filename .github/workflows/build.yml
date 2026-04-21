@@ -47,7 +47,7 @@ jobs:
 
           # Signer
           codesign --deep --force --verify --verbose \
-            --sign "Developer ID Application: $(security find-certificate -c 'Developer ID Application' -p build.keychain | openssl x509 -noout -subject | sed 's/.*CN=\(.*\), OU.*/\1/')" \
+            --sign "Developer ID Application: Norou N'Doye (AP294Y6225)" \
             --options runtime \
             --entitlements /dev/stdin \
             dist/ZoquerGMail.app <<'ENTITLEMENTS'
