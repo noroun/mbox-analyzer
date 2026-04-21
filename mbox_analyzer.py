@@ -908,13 +908,10 @@ def _render_text_with_links(parent, text, font, fg="#333", wraplength=580, pady=
     pos = 0
     for match in _URL_RE.finditer(text):
         widget.insert("end", text[pos:match.start()])
-        link_start = widget.index("end")   # position d'insertion AVANT le lien
-        widget.insert("end", match.group(0))
-        link_end = widget.index("end")     # position APRÈS le dernier char du lien
         tag = f"link-{match.start()}"
-        widget.tag_add(tag, link_start, link_end)
-        widget.tag_config(tag, foreground="#1565C0", underline=True)
         url = match.group(0)
+        widget.insert("end", url, (tag,))
+        widget.tag_config(tag, foreground="#1565C0", underline=True)
         widget.tag_bind(tag, "<Button-1>", lambda _e, u=url: webbrowser.open(u))
         widget.tag_bind(tag, "<Enter>", lambda _e: widget.config(cursor="hand2"))
         widget.tag_bind(tag, "<Leave>", lambda _e: widget.config(cursor="arrow"))
@@ -1087,7 +1084,8 @@ class App:
         top_bar.pack(fill="x", padx=10, pady=(10, 0))
         tk.Button(top_bar, text="❓ Aide", command=lambda: show_help(root),
                   font=(GOTHIC_FONT, 13), padx=12, pady=4, cursor="hand2",
-                  relief="flat", bg="#E3F2FD", fg="#1565C0").pack(side="right")
+                  relief="flat", borderwidth=0, highlightthickness=0,
+                  bg="#E3F2FD", fg="#1565C0").pack(side="right")
 
         # En-tête
         header = tk.Frame(root, bg=APP_BG)
@@ -1096,9 +1094,9 @@ class App:
         title_frame = tk.Frame(header, bg=APP_BG)
         title_frame.pack(side="left", expand=True, fill="x")
         tk.Label(title_frame, text="📧 Analyseur de boite mail en local",
-                 font=(GOTHIC_FONT, 18, "bold"), bg=APP_BG, anchor="w").pack(anchor="w")
+                 font=(GOTHIC_FONT, 18, "bold"), bg=APP_BG, fg="#222", anchor="w").pack(anchor="w")
         tk.Label(title_frame,
-                 text="Récupère un fichier Excel avec tous les sites où tu as un compte\nlié à ton adresse gadz.org.\n Tout est traité localement sur ton ordinateur (analyse par mots clés sans IA).\nAucune donnée n'est envoyée sur Internet.",
+                 text="Récupère un fichier Excel avec tous les sites où tu as un compte\nlié à ton adresse gadz.org.\nTout est traité localement sur ton ordinateur (analyse par mots clés sans IA).\nAucune donnée n'est envoyée sur Internet.",
                  font=(GOTHIC_FONT, 13), fg="#555", bg=APP_BG, anchor="w", justify="left").pack(anchor="w")
 
         # Variables reliées aux champs (avec trace pour réactivité)
@@ -1111,7 +1109,7 @@ class App:
         f0 = tk.Frame(root, bg=APP_BG)
         f0.pack(pady=(0, 2), fill="x", padx=20)
         tk.Label(f0, text="1. Télécharge ton fichier MBOX (export Gmail via Google Takeout) :",
-                 anchor="w", bg=APP_BG).pack(anchor="w")
+                 anchor="w", bg=APP_BG, fg="#222").pack(anchor="w")
         link = tk.Label(f0, text="→ takeout.google.com", anchor="w",
                         bg=APP_BG, fg="#1565C0", cursor="hand2",
                         font=(GOTHIC_FONT, 13, "underline"))
@@ -1121,19 +1119,21 @@ class App:
         # Sélection du fichier MBOX
         f1 = tk.Frame(root, bg=APP_BG)
         f1.pack(pady=5, fill="x", padx=20)
-        tk.Label(f1, text="2. Importe le fichier MBOX ici :", anchor="w", bg=APP_BG).pack(anchor="w")
+        tk.Label(f1, text="2. Importe le fichier MBOX ici :", anchor="w", bg=APP_BG, fg="#222").pack(anchor="w")
         f1b = tk.Frame(f1, bg=APP_BG)
         f1b.pack(fill="x")
-        tk.Entry(f1b, textvariable=self.mbox_path).pack(side="left", fill="x", expand=True)
+        tk.Entry(f1b, textvariable=self.mbox_path, bg="white", fg="black", insertbackground="black",
+                 relief="flat", highlightthickness=1, highlightbackground="#CCCCCC").pack(side="left", fill="x", expand=True)
         tk.Button(f1b, text="Parcourir...", command=self.choose_mbox).pack(side="right", padx=(5, 0))
 
         # Sélection du dossier de sortie
         f2 = tk.Frame(root, bg=APP_BG)
         f2.pack(pady=10, fill="x", padx=20)
-        tk.Label(f2, text="3. Dossier où enregistrer les résultats (tu peux le changer) :", anchor="w", bg=APP_BG).pack(anchor="w")
+        tk.Label(f2, text="3. Dossier où enregistrer les résultats (tu peux le changer) :", anchor="w", bg=APP_BG, fg="#222").pack(anchor="w")
         f2b = tk.Frame(f2, bg=APP_BG)
         f2b.pack(fill="x")
-        tk.Entry(f2b, textvariable=self.output_dir).pack(side="left", fill="x", expand=True)
+        tk.Entry(f2b, textvariable=self.output_dir, bg="white", fg="black", insertbackground="black",
+                 relief="flat", highlightthickness=1, highlightbackground="#CCCCCC").pack(side="left", fill="x", expand=True)
         tk.Button(f2b, text="Parcourir...", command=self.choose_output).pack(side="right", padx=(5, 0))
 
         # Barre de progression
@@ -1237,7 +1237,7 @@ class App:
             return
 
         self.btn.config(state="disabled", text="Analyse en cours...", bg=BTN_RUNNING_BG, fg="black", cursor="arrow")
-        self.duration_hint.config(text="⏱️  Selon la taille de votre boîte, l'analyse peut prendre entre 5 et 10 minutes.")
+        self.duration_hint.config(text="⏱️  Selon la taille de votre boîte, l'analyse peut prendre jusqu'à 5 voire 10 minutes.")
         # Une nouvelle analyse invalide le bouton "Ouvrir" précédent.
         self.open_result_btn.pack_forget()
         self.last_result_path = None
