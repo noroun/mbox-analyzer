@@ -933,7 +933,7 @@ def show_help(parent):
     """Affiche une fenêtre d'aide avec le contenu formaté."""
     win = tk.Toplevel(parent)
     win.title("Aide")
-    win.geometry("700x600")
+    win.geometry("820x700")
     win.transient(parent)
 
     BG = "#F0F0F0"
@@ -977,42 +977,42 @@ def show_help(parent):
 
     for kind, value in HELP_CONTENT:
         if kind == "title":
-            tk.Label(inner, text=value, font=(GOTHIC_FONT, 18, "bold"),
+            tk.Label(inner, text=value, font=(GOTHIC_FONT, 22, "bold"),
                      bg=BG, fg="#1B5E20", anchor="w", justify="left").pack(anchor="w", pady=(0, 5))
         elif kind == "subtitle":
-            tk.Label(inner, text=value, font=(GOTHIC_FONT, 11, "italic"),
+            tk.Label(inner, text=value, font=(GOTHIC_FONT, 14, "italic"),
                      bg=BG, fg="#555", anchor="w", justify="left",
                      wraplength=600).pack(anchor="w", pady=(0, 15))
         elif kind == "h2":
-            tk.Label(inner, text=value, font=(GOTHIC_FONT, 14, "bold"),
+            tk.Label(inner, text=value, font=(GOTHIC_FONT, 17, "bold"),
                      bg=BG, fg="#2E7D32", anchor="w", justify="left").pack(anchor="w", pady=(15, 8))
         elif kind == "h3":
-            tk.Label(inner, text=value, font=(GOTHIC_FONT, 12, "bold"),
+            tk.Label(inner, text=value, font=(GOTHIC_FONT, 15, "bold"),
                      bg=BG, fg="#333", anchor="w", justify="left").pack(anchor="w", pady=(10, 5))
         elif kind == "p":
-            _render_text_with_links(inner, value, font=(GOTHIC_FONT, 10),
+            _render_text_with_links(inner, value, font=(GOTHIC_FONT, 13),
                                     fg="#333", wraplength=600, pady=(0, 5), bg=BG)
         elif kind == "note":
             f = tk.Frame(inner, bg="#FFF9C4", padx=10, pady=8)
             f.pack(anchor="w", fill="x", pady=5)
-            tk.Label(f, text=value, font=(GOTHIC_FONT, 10),
+            tk.Label(f, text=value, font=(GOTHIC_FONT, 13),
                      bg="#FFF9C4", fg="#555", anchor="w", justify="left",
                      wraplength=580).pack(anchor="w")
         elif kind == "ol":
             for i, item in enumerate(value, 1):
                 _render_text_with_links(inner, f"  {i}. {item}",
-                                        font=(GOTHIC_FONT, 10), fg="#333",
+                                        font=(GOTHIC_FONT, 13), fg="#333",
                                         wraplength=580, pady=(0, 1), bg=BG)
         elif kind == "ul":
             for item in value:
                 _render_text_with_links(inner, f"  •  {item}",
-                                        font=(GOTHIC_FONT, 10), fg="#333",
+                                        font=(GOTHIC_FONT, 13), fg="#333",
                                         wraplength=580, pady=(0, 1), bg=BG)
         elif kind == "code":
             # Bloc de code monospace sur fond gris clair.
             f = tk.Frame(inner, bg="#F5F5F5", padx=10, pady=8)
             f.pack(anchor="w", fill="x", pady=5)
-            tk.Label(f, text=value, font=(GOTHIC_FONT, 10),
+            tk.Label(f, text=value, font=(GOTHIC_FONT, 13),
                      bg="#F5F5F5", fg="#222", anchor="w", justify="left").pack(anchor="w")
         elif kind == "sep":
             # Séparateur horizontal fin.
@@ -1024,14 +1024,14 @@ def show_help(parent):
             tbl.pack(anchor="w", fill="x", pady=5)
             col_widths = (22, 32, 32)
             for col, h in enumerate(headers):
-                tk.Label(tbl, text=h, font=(GOTHIC_FONT, 10, "bold"),
+                tk.Label(tbl, text=h, font=(GOTHIC_FONT, 13, "bold"),
                          bg="#E8F5E9", fg="#1B5E20", anchor="w",
                          width=col_widths[col], padx=6, pady=4,
                          borderwidth=1, relief="solid").grid(row=0, column=col, sticky="nsew")
             for r, row in enumerate(rows, start=1):
                 bg = "#E8E8E8" if r % 2 == 0 else "#F5F5F5"
                 for col, cell in enumerate(row):
-                    tk.Label(tbl, text=cell, font=(GOTHIC_FONT, 10),
+                    tk.Label(tbl, text=cell, font=(GOTHIC_FONT, 13),
                              bg=bg, fg="#333", anchor="w", justify="left",
                              width=col_widths[col], padx=6, pady=4,
                              wraplength=col_widths[col] * 7,
@@ -1039,7 +1039,7 @@ def show_help(parent):
 
     # Bouton fermer en bas
     tk.Button(inner, text="Fermer", command=win.destroy,
-              bg="#2E7D32", fg="white", font=(GOTHIC_FONT, 10, "bold"),
+              bg="#2E7D32", fg="white", font=(GOTHIC_FONT, 13, "bold"),
               padx=20, pady=5, relief="flat", cursor="hand2").pack(pady=20)
 
 
@@ -1065,8 +1065,8 @@ def _resource_path(filename):
 class App:
     def __init__(self, root):
         self.root = root
-        root.title("Zoquer GMail")
-        root.geometry("640x560")
+        root.title("Zoquez la mdt bords")
+        root.geometry("720x640")
         root.resizable(False, False)
         root.configure(bg=APP_BG)
 
@@ -1080,13 +1080,13 @@ class App:
             GOTHIC_FONT = "Blackmoor LET"
         else:
             GOTHIC_FONT = "Century Gothic"
-        root.option_add("*Font", (GOTHIC_FONT, 11))
+        root.option_add("*Font", (GOTHIC_FONT, 14))
 
         # Barre supérieure avec bouton aide
         top_bar = tk.Frame(root, bg=APP_BG)
         top_bar.pack(fill="x", padx=10, pady=(10, 0))
         tk.Button(top_bar, text="❓ Aide", command=lambda: show_help(root),
-                  font=(GOTHIC_FONT, 10), padx=12, pady=4, cursor="hand2",
+                  font=(GOTHIC_FONT, 13), padx=12, pady=4, cursor="hand2",
                   relief="flat", bg="#E3F2FD", fg="#1565C0").pack(side="right")
 
         # En-tête
@@ -1096,10 +1096,10 @@ class App:
         title_frame = tk.Frame(header, bg=APP_BG)
         title_frame.pack(side="left", expand=True, fill="x")
         tk.Label(title_frame, text="📧 Analyseur de boite mail en local",
-                 font=(GOTHIC_FONT, 15, "bold"), bg=APP_BG, anchor="w").pack(anchor="w")
+                 font=(GOTHIC_FONT, 18, "bold"), bg=APP_BG, anchor="w").pack(anchor="w")
         tk.Label(title_frame,
                  text="Récupère un fichier Excel avec tous les sites où tu as un compte\nlié à ton adresse gadz.org.\n Tout est traité localement sur ton ordinateur (analyse par mots clés sans IA).\nAucune donnée n'est envoyée sur Internet.",
-                 font=(GOTHIC_FONT, 10), fg="#555", bg=APP_BG, anchor="w", justify="left").pack(anchor="w")
+                 font=(GOTHIC_FONT, 13), fg="#555", bg=APP_BG, anchor="w", justify="left").pack(anchor="w")
 
         # Variables reliées aux champs (avec trace pour réactivité)
         self.mbox_path = tk.StringVar()
@@ -1114,7 +1114,7 @@ class App:
                  anchor="w", bg=APP_BG).pack(anchor="w")
         link = tk.Label(f0, text="→ takeout.google.com", anchor="w",
                         bg=APP_BG, fg="#1565C0", cursor="hand2",
-                        font=(GOTHIC_FONT, 10, "underline"))
+                        font=(GOTHIC_FONT, 13, "underline"))
         link.pack(anchor="w")
         link.bind("<Button-1>", lambda _: webbrowser.open("https://takeout.google.com"))
 
@@ -1145,7 +1145,7 @@ class App:
         self.status.pack()
 
         self.duration_hint = tk.Label(root, text="", fg="#E65100",
-                                      font=(GOTHIC_FONT, 10, "italic"), bg=APP_BG)
+                                      font=(GOTHIC_FONT, 13, "italic"), bg=APP_BG)
         self.duration_hint.pack()
 
         # Ligne de boutons (lancer + télécharger résultat côte à côte)
@@ -1154,7 +1154,7 @@ class App:
 
         self.btn = tk.Button(btn_row, text="4.  ▶  Lancer l'analyse",
                              command=self.start, bg=BTN_DISABLED_BG, fg="black",
-                             font=(GOTHIC_FONT, 12, "bold"), padx=30, pady=10,
+                             font=(GOTHIC_FONT, 15, "bold"), padx=30, pady=10,
                              relief="flat", cursor="arrow",
                              state="disabled",
                              disabledforeground="black")
@@ -1170,13 +1170,13 @@ class App:
             btn_row, text="📥  5. Télécharger Résultat",
             command=self._open_last_result,
             bg="#1565C0", fg="black",
-            font=(GOTHIC_FONT, 12, "bold"), padx=20, pady=10,
+            font=(GOTHIC_FONT, 15, "bold"), padx=20, pady=10,
             relief="flat", cursor="hand2",
         )
         # non-packé au démarrage — apparaît après le premier succès.
 
         tk.Label(root, text="v54me209mdt\nValidez la strass", fg="#AAAAAA",
-                 font=(GOTHIC_FONT, 8), bg=APP_BG).pack(side="bottom", pady=(0, 4))
+                 font=(GOTHIC_FONT, 11), bg=APP_BG).pack(side="bottom", pady=(0, 4))
 
     def _fields_ready(self):
         return bool(self.mbox_path.get().strip() and self.output_dir.get().strip())
